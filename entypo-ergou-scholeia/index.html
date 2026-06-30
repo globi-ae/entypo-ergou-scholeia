@@ -1,0 +1,1317 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="./site-survey-manifest.webmanifest">
+  <title>Έντυπο Έργου Σχολείων Θεσσαλονίκης</title>
+  <style>
+    :root {
+      --bg: #f3f5f7;
+      --paper: #ffffff;
+      --ink: #18212b;
+      --muted: #66717d;
+      --line: #d9e0e7;
+      --accent: #0f766e;
+      --blue: #1d4ed8;
+      --amber: #a16207;
+      --red: #b91c1c;
+      --green: #15803d;
+      --soft: #e8f4f1;
+      --radius: 8px;
+      --shadow: 0 8px 22px rgba(24, 33, 43, .08);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    input, select, textarea, button { font: inherit; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: var(--paper);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .topbar {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(21px, 3vw, 30px);
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .toolbar, .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .tabs-wrap {
+      border-top: 1px solid var(--line);
+      background: #fbfcfd;
+      overflow-x: auto;
+    }
+
+    .tabs {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 16px;
+      display: flex;
+      gap: 4px;
+      min-width: max-content;
+    }
+
+    .tab {
+      border: 0;
+      background: transparent;
+      min-height: 44px;
+      padding: 12px 11px;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+    }
+
+    .tab[aria-selected="true"] {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      font-weight: 700;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .metric {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      min-height: 70px;
+    }
+
+    .metric b {
+      display: block;
+      font-size: 23px;
+      line-height: 1.1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfd;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .panel-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .panel-body { padding: 14px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .field > span, .field-title {
+      color: #344151;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #c8d2dc;
+      border-radius: 6px;
+      background: #fff;
+      min-height: 42px;
+      padding: 9px 10px;
+      outline: none;
+      color: var(--ink);
+    }
+
+    textarea {
+      min-height: 98px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, .14);
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      min-height: 40px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .btn.blue {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .btn.danger {
+      border-color: #fecaca;
+      background: #fff5f5;
+      color: var(--red);
+    }
+
+    .btn.icon {
+      width: 40px;
+      padding: 0;
+      font-weight: 700;
+    }
+
+    .question-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .question {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .question-top {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: start;
+      padding: 12px;
+      background: #fbfcfd;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .qno {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--soft);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 13px;
+      flex: none;
+    }
+
+    .question-title {
+      margin: 2px 0 0;
+      font-weight: 700;
+    }
+
+    .question-hint {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .required-mark {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 6px;
+      min-height: 22px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #fef3c7;
+      color: var(--amber);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .status-pill {
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      min-height: 32px;
+      padding: 5px 9px;
+      color: var(--muted);
+      background: #fff;
+      font-size: 13px;
+    }
+
+    .question-body {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .photo-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 8px;
+    }
+
+    .photo {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+      min-width: 0;
+    }
+
+    .photo img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      background: #edf2f7;
+    }
+
+    .photo input {
+      border: 0;
+      border-top: 1px solid var(--line);
+      border-radius: 0;
+      min-height: 38px;
+      font-size: 13px;
+    }
+
+    .photo-footer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+
+    .signature-pad {
+      border: 1px solid #c8d2dc;
+      border-radius: 6px;
+      background: #fff;
+      width: 100%;
+      height: 170px;
+      touch-action: none;
+    }
+
+    .summary {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+      padding: 12px;
+      min-height: 84px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      z-index: 100;
+      background: #18212b;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 6px;
+      opacity: 0;
+      transition: opacity .18s ease;
+      pointer-events: none;
+      max-width: min(92vw, 520px);
+      text-align: center;
+    }
+
+    .toast.show { opacity: 1; }
+
+    .print-report { display: none; }
+
+    @media (max-width: 820px) {
+      .topbar { grid-template-columns: 1fr; }
+      .toolbar { justify-content: stretch; }
+      .toolbar .btn { flex: 1 1 auto; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid, .grid.three, .quick-grid { grid-template-columns: 1fr; }
+      .panel-head { flex-direction: column; }
+      .question-top { grid-template-columns: auto 1fr; }
+      .question-top .status-pill { grid-column: 2; width: 100%; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      header, .metrics, #surveyForm, .toast { display: none !important; }
+      main { max-width: none; padding: 0; }
+      .print-report {
+        display: block;
+        color: #111827;
+        font-size: 12px;
+      }
+      .print-report h1 { margin: 0 0 8px; font-size: 21px; }
+      .print-report h2 {
+        margin: 18px 0 8px;
+        font-size: 15px;
+        border-bottom: 1px solid #888;
+        padding-bottom: 4px;
+      }
+      .print-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px 18px;
+      }
+      .print-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .print-table th, .print-table td {
+        border: 1px solid #999;
+        padding: 5px;
+        text-align: left;
+        vertical-align: top;
+      }
+      .print-photos {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        break-inside: avoid;
+      }
+      .print-photo img {
+        width: 100%;
+        height: 155px;
+        object-fit: cover;
+        border: 1px solid #999;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div>
+        <h1>Έντυπο Έργου Σχολείων Θεσσαλονίκης</h1>
+        <p class="subtitle">Δράση Δ - Ολοκληρωμένο Σύστημα Εξοικονόμησης Πόρων Σχολικών Κτηρίων και Υποδομών</p>
+      </div>
+      <div class="toolbar">
+        <button class="btn" type="button" id="locateBtn" title="Καταγραφή GPS">⌖ Θέση</button>
+        <button class="btn primary" type="button" id="sendBtn" title="Αποθήκευση στη συσκευή και αποστολή στο γραφείο">✓ Αποθήκευση - Αποστολή</button>
+        <button class="btn" type="button" id="jsonBtn" title="Εξαγωγή δεδομένων JSON">⇩ JSON</button>
+        <label class="btn" for="importJsonInput" title="Εισαγωγή αποθηκευμένου εντύπου έργου">⇧ Import</label>
+        <input id="importJsonInput" type="file" accept="application/json,.json" hidden>
+        <button class="btn blue" type="button" id="printBtn" title="Εκτύπωση ή αποθήκευση PDF">⎙ PDF</button>
+        <button class="btn danger" type="button" id="resetBtn" title="Νέο έντυπο έργου">× Νέα</button>
+      </div>
+    </div>
+    <div class="tabs-wrap">
+      <nav class="tabs" aria-label="Ενότητες">
+        <button class="tab" type="button" data-tab="meta" aria-selected="true">Στοιχεία</button>
+        <button class="tab" type="button" data-tab="energy">Αναλυτής</button>
+        <button class="tab" type="button" data-tab="water">Υδρόμετρο</button>
+        <button class="tab" type="button" data-tab="fuel">Θέρμανση</button>
+        <button class="tab" type="button" data-tab="close">Κλείσιμο</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="metrics" aria-label="Πρόοδος">
+      <div class="metric"><b id="progressMetric">0%</b><span>πληρότητα</span></div>
+      <div class="metric"><b id="doneMetric">0/0</b><span>απαντήσεις</span></div>
+      <div class="metric"><b id="photoMetric">0</b><span>φωτογραφίες</span></div>
+      <div class="metric"><b id="saveMetric">-</b><span>τελευταία αποθήκευση</span></div>
+    </section>
+
+    <form id="surveyForm">
+      <section class="screen active" id="meta">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Ταυτότητα έργου</h2>
+              <p>Βασικά στοιχεία σχολείου, έργου και συνεργείου.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="grid">
+              <label class="field"><span>Διαδικασία</span><input name="procedure" value="Έντυπο Έργου"></label>
+              <label class="field"><span>Ημερομηνία</span><input name="date" type="date"></label>
+              <label class="field"><span>Έργο</span><input name="project" value="Ολοκληρωμένο Σύστημα Εξοικονόμησης Πόρων Σχολικών Κτηρίων και Υποδομών"></label>
+              <label class="field"><span>Μηχανικός / εταιρεία</span><input name="engineer" placeholder="Ονοματεπώνυμο ή εταιρεία"></label>
+              <label class="field"><span>ID σχολείου</span><input name="schoolId" placeholder="π.χ. A15"></label>
+              <label class="field"><span>Διεύθυνση σχολείου</span><input name="schoolAddress" placeholder="π.χ. Εγνατίας 132"></label>
+              <label class="field"><span>Σχολική μονάδα</span><input name="schoolName" placeholder="π.χ. 133ο Δημοτικό"></label>
+              <label class="field"><span>Δήμος</span><input name="municipality" value="Θεσσαλονίκης"></label>
+            </div>
+            <label class="field" style="margin-top:12px"><span>Συντεταγμένες / θέση</span><input id="gpsField" name="gps" placeholder="Πατήστε Θέση ή συμπληρώστε χειροκίνητα"></label>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="energy">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Αναλυτής ενέργειας</h2>
+              <p>Μετρητής ΔΕΗ, ηλεκτρολογικός πίνακας, χώρος εγκατάστασης και σήματα.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <label class="field" style="margin-bottom:12px"><span>Ημερομηνία εργασίας</span><input name="energyWorkDate" type="date"></label>
+            <div class="question-list" id="energyQuestions"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="water">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Υδρόμετρο</h2>
+              <p>Θέση μετρητή ύδρευσης, κεντρικός αγωγός, διατομές και προτεινόμενη εγκατάσταση.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <label class="field" style="margin-bottom:12px"><span>Ημερομηνία εργασίας</span><input name="waterWorkDate" type="date"></label>
+            <div class="question-list" id="waterQuestions"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="fuel">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Θέρμανση - Φυσικό Αέριο</h2>
+              <p>Καυστήρας φυσικού αερίου, υφιστάμενος χειρισμός και εγκατάσταση θερμοστάτη/Fibaro.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <label class="field" style="margin-bottom:12px"><span>Ημερομηνία εργασίας</span><input name="fuelWorkDate" type="date"></label>
+            <div class="question-list" id="fuelQuestions"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="close">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Κλείσιμο εντύπου έργου</h2>
+              <p>Σύνοψη, εκκρεμότητες και υπογραφές.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="grid">
+              <label class="field"><span>Γενική κατάσταση</span>
+                <select name="overallStatus">
+                  <option value="">Επιλογή</option>
+                  <option>Ολοκληρώθηκε</option>
+                  <option>Ολοκληρώθηκε με εκκρεμότητες</option>
+                  <option>Απαιτείται επανέλεγχος</option>
+                  <option>Δεν ήταν εφικτή η πλήρης ολοκλήρωση</option>
+                </select>
+              </label>
+              <label class="field"><span>Ημερομηνία ολοκλήρωσης</span><input name="completionDate" type="date"></label>
+            </div>
+            <label class="field" style="margin-top:12px"><span>Τελική σύνοψη / εκκρεμότητες</span><textarea name="finalNotes" placeholder="Συνοπτική περιγραφή εργασιών, περιορισμών και εκκρεμοτήτων"></textarea></label>
+            <div class="grid" style="margin-top:12px">
+              <label class="field"><span>Υπογραφή μηχανικού</span><canvas class="signature-pad" id="engineerSig" width="720" height="220"></canvas></label>
+            </div>
+            <div class="row-actions" style="justify-content:flex-start;margin-top:10px">
+              <button class="btn" type="button" id="clearEngineerSig">Καθαρισμός μηχανικού</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Σύνοψη</h2></div>
+          <div class="panel-body"><div class="summary" id="summaryBox"></div></div>
+        </div>
+      </section>
+    </form>
+
+    <section class="print-report" id="printReport"></section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const STORAGE_KEY = "thessaloniki-school-project-form-v1";
+    const OFFICE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwdC_D4JR7TvDWBsAyzcLdOZ5BvEM4iqyKNxSoccFyf1dYSEUiUJDCVrvLqYcDYbt2oDg/exec";
+
+    const sections = {
+      energy: {
+        title: "ΑΝΑΛΥΤΗΣ ΕΝΕΡΓΕΙΑΣ",
+        mount: "energyQuestions",
+        questions: [
+          {
+            id: "deddie_meter",
+            title: "Μετρητής ΔΕΔΔΗΕ",
+            hint: "Καταγραφή αριθμού παροχής και έλεγχος αν ταυτίζεται με τη λίστα.",
+            placeholders: ["Αριθμός παροχής", "Ταυτίζεται;", "Παρατήρηση"],
+            photo: true,
+            notes: false
+          },
+          {
+            id: "electrical_before_notes",
+            title: "Καταγραφή/παρατηρήσεις ηλεκτρολογικής εγκατάστασης κτιρίου πριν την εγκατάσταση μας",
+            hint: "Υποχρεωτική καταγραφή κατάστασης πριν τις εργασίες: φθορές, ελλείψεις, κίνδυνοι, πρόσβαση, ανάγκη διακοπής ή θέματα πίνακα.",
+            placeholders: ["Κατάσταση πριν", "Θέματα / κίνδυνοι", "Ενέργεια που απαιτείται"],
+            photo: true,
+            required: true
+          },
+          {
+            id: "electrical_panel_analysis",
+            title: "Ανάλυση ηλεκτρολογικού πίνακα",
+            hint: "Συμπλήρωση βασικών τεχνικών στοιχείων πίνακα και παροχής.",
+            placeholders: ["Τοποθεσία - όροφος", "Γενικός διακόπτης", "Διατομή καλωδίων"],
+            noteLabel: "Παρατηρήσεις",
+            notePlaceholder: "Παρατηρήσεις για πίνακα, πρόσβαση, ασφάλεια ή ειδικές συνθήκες",
+            photo: true
+          },
+          {
+            id: "energy_analyzer_installation",
+            title: "Εγκατάσταση Αναλυτή ενέργειας",
+            hint: "Καταγραφή σημείου εγκατάστασης, μετασχηματιστών και λειτουργικού ελέγχου.",
+            placeholders: ["Σημείο εγκατάστασης", "Τύπος μετασχηματιστών", "Έλεγχος λειτουργίας"],
+            inputHints: ["", "π.χ. 100Α ή 125Α", ""],
+            noteLabel: "Παρατηρήσεις",
+            notePlaceholder: "Παρατηρήσεις εγκατάστασης, φωτογραφιών πριν/μετά ή λειτουργικού ελέγχου",
+            photo: true
+          },
+          {
+            id: "energy_signal",
+            title: "Σήμα Wi-Fi και κινητής στο σημείο αναλυτή",
+            hint: "Καταγραφή ssid, password εφόσον δίνεται, πάροχος και ισχύς σήματος.",
+            placeholders: ["Wi-Fi / ssid", "Κινητή / πάροχος", "Ισχύς / password / σχόλιο"],
+            photo: false,
+            notes: false
+          },
+          {
+            id: "energy_comments",
+            title: "Γενικότερα σχόλια",
+            hint: "Περιορισμοί, συνεννοήσεις, διακοπές ρεύματος ή ειδικές συνθήκες.",
+            placeholders: ["Υπεύθυνος", "Σχόλιο"],
+            photo: false,
+            notes: false
+          }
+        ]
+      },
+      water: {
+        title: "ΥΔΡΟΜΕΤΡΟ",
+        mount: "waterQuestions",
+        questions: [
+          {
+            id: "water_pipe_analysis",
+            title: "Ανάλυση παροχής / σωλήνωσης",
+            hint: "Καταγραφή πορείας σωλήνα, υλικού, διατομής και διαθέσιμου χώρου επέμβασης.",
+            placeholders: ["Τοποθεσία - χώρος", "Υλικό / διατομή σωλήνα", "Διαθέσιμος χώρος"],
+            inputHints: ["", "π.χ. PVC 1” ή γαλβανιζέ 1”", ""],
+            noteLabel: "Παρατηρήσεις",
+            notePlaceholder: "Παρατηρήσεις για σωληνώσεις, φρεάτιο, χώρο επέμβασης ή ειδικές δυσκολίες",
+            photo: true
+          },
+          {
+            id: "water_meter_installation",
+            title: "Εγκατάσταση Υδρομέτρου",
+            hint: "Καταγραφή σημείου εγκατάστασης, διατομής/συνδέσεων και λειτουργικού ελέγχου.",
+            placeholders: ["Σημείο εγκατάστασης", "Διατομή υδρομέτρου", "Έλεγχος λειτουργίας"],
+            inputHints: ["", "π.χ. DN25 ή DN32", ""],
+            noteLabel: "Παρατηρήσεις",
+            notePlaceholder: "Παρατηρήσεις εγκατάστασης, φωτογραφιών πριν/μετά ή λειτουργικού ελέγχου",
+            photo: true
+          },
+          {
+            id: "water_mobile_signal",
+            title: "Σήμα κινητής στο σημείο υδρομέτρου",
+            hint: "Πάροχος και ισχύς σήματος στο φρεάτιο, λεβητοστάσιο ή άλλο σημείο εγκατάστασης.",
+            placeholders: ["Πάροχος", "Τεχνολογία / γραμμές", "Παρατήρηση"],
+            photo: false,
+            notes: false
+          },
+          {
+            id: "water_comments",
+            title: "Γενικότερα σχόλια",
+            hint: "Κοινός μετρητής, αδυναμία εντοπισμού, ανάγκη επανελέγχου από υδραυλικό.",
+            placeholders: ["Υπεύθυνος", "Σχόλιο"],
+            photo: false,
+            notes: false
+          }
+        ]
+      },
+      fuel: {
+        title: "ΘΕΡΜΑΝΣΗ - ΦΥΣΙΚΟ ΑΕΡΙΟ",
+        mount: "fuelQuestions",
+        questions: [
+          {
+            id: "gas_burner",
+            title: "Καυστήρας Φυσικού Αερίου",
+            hint: "Καταγραφή στοιχείων καυστήρα και φωτογραφία πινακίδας/χώρου όπου είναι εφικτό.",
+            placeholders: ["Κατασκευαστής", "Serial number", "Παρατήρηση"],
+            photo: true,
+            notes: false
+          },
+          {
+            id: "heating_control_before",
+            title: "Τρόπος χειρισμού πριν την επέμβαση μας",
+            hint: "Καταγραφή του τρόπου που χειριζόταν το σχολείο τη θέρμανση πριν τη δική μας επέμβαση.",
+            placeholders: ["Υφιστάμενη εγκατάσταση απομακρυσμένου χειρισμού", "Τρόπος χειρισμού", "Παρατήρηση"],
+            inputHints: ["ΝΑΙ ή ΟΧΙ", "", ""],
+            photo: false,
+            notes: false
+          },
+          {
+            id: "existing_thermostat",
+            title: "Υφιστάμενος θερμοστάτης",
+            hint: "Καταγραφή αν υπάρχει θερμοστάτης, σε ποιο χώρο βρίσκεται και αν λειτουργεί.",
+            placeholders: ["Υπάρχει;", "Χώρος", "Λειτουργικός;"],
+            inputHints: ["ΝΑΙ ή ΟΧΙ", "", "ΝΑΙ ή ΟΧΙ"],
+            photo: true,
+            notes: false
+          },
+          {
+            id: "our_thermostat_installation",
+            title: "Εγκατάσταση δικού μας Θερμοστάτη",
+            hint: "Καταγραφή θέσης θερμοστάτη, καλωδίωσης και θέσης εγκατάστασης Fibaro.",
+            placeholders: ["Μέρος", "Καλωδίωση", "Εγκατάσταση Fibaro - μέρος", "Έλεγχος λειτουργίας"],
+            noteLabel: "Παρατηρήσεις",
+            notePlaceholder: "Παρατηρήσεις εγκατάστασης, σύνδεσης, δοκιμής ή ειδικών συνθηκών",
+            photo: true
+          },
+          {
+            id: "fuel_comments",
+            title: "Γενικότερα σχόλια",
+            hint: "Εκκρεμότητες, ειδικές συνθήκες, υπεύθυνος ή σχόλια για τη θέρμανση.",
+            placeholders: ["Υπεύθυνος", "Σχόλιο"],
+            photo: false,
+            notes: false
+          }
+        ]
+      }
+    };
+
+    const state = {
+      answers: {},
+      photos: {},
+      signatures: { engineerSig: "" }
+    };
+
+    const PHOTO_MAX_SIZE = 1280;
+    const PHOTO_JPEG_QUALITY = 0.72;
+
+    const form = document.getElementById("surveyForm");
+    const toast = document.getElementById("toast");
+
+    function today() {
+      const d = new Date();
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().slice(0, 10);
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1900);
+    }
+
+    function allQuestions() {
+      return Object.values(sections).flatMap(section => section.questions.map(q => ({ ...q, sectionTitle: section.title })));
+    }
+
+    function renderQuestion(sectionKey, question, index) {
+      const photos = state.photos[question.id] || [];
+      return `
+        <article class="question" data-question="${question.id}" data-section="${sectionKey}">
+          <div class="question-top">
+            <span class="qno">${index + 1}</span>
+            <div>
+              <div class="question-title">${escapeHtml(question.title)}${question.required ? `<span class="required-mark">Υποχρεωτικό</span>` : ""}</div>
+              <p class="question-hint">${escapeHtml(question.hint)}</p>
+            </div>
+            <select class="status-pill" data-field="status" aria-label="Κατάσταση">
+              ${["", "ΟΚ", "Θέμα", "Εκκρεμεί", "Δεν εφαρμόζεται"].map(v => `<option value="${v}" ${getAnswer(question.id, "status") === v ? "selected" : ""}>${v || "Κατάσταση"}</option>`).join("")}
+            </select>
+          </div>
+          <div class="question-body">
+            <div class="quick-grid">
+              ${question.placeholders.map((label, i) => `
+                <label class="field">
+                  <span>${escapeHtml(label)}</span>
+                  <input data-field="quick${i + 1}" value="${escapeHtml(getAnswer(question.id, `quick${i + 1}`))}" placeholder="${escapeHtml((question.inputHints && question.inputHints[i]) || "")}">
+                </label>
+              `).join("")}
+            </div>
+            ${question.notes === false ? "" : `
+              <label class="field">
+                <span>${escapeHtml(question.noteLabel || "Αναλυτική περιγραφή")}</span>
+                <textarea data-field="notes" placeholder="${escapeHtml(question.notePlaceholder || "Συμπλήρωση όπως στο έντυπο έργου")}">${escapeHtml(getAnswer(question.id, "notes"))}</textarea>
+              </label>
+            `}
+            <div class="row-actions" style="justify-content:flex-start">
+              ${question.photo ? `<label class="btn primary" for="photo_${question.id}">+ Φωτογραφία</label><input id="photo_${question.id}" data-photo-input="${question.id}" type="file" accept="image/*" capture="environment" multiple hidden>` : ""}
+            </div>
+            <div class="photo-strip">
+              ${photos.map((photo, photoIndex) => `
+                <div class="photo">
+                  <img src="${photo.dataUrl}" alt="Φωτογραφία ${photoIndex + 1} - ${escapeHtml(question.title)}">
+                  <div class="photo-footer">
+                    <input data-photo-caption="${question.id}" data-photo-index="${photoIndex}" value="${escapeHtml(photo.caption)}" placeholder="Λεζάντα">
+                    <button class="btn icon danger" type="button" data-remove-photo="${question.id}" data-photo-index="${photoIndex}" title="Διαγραφή φωτογραφίας">×</button>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderSections() {
+      Object.entries(sections).forEach(([key, section]) => {
+        document.getElementById(section.mount).innerHTML = section.questions.map((q, i) => renderQuestion(key, q, i)).join("");
+      });
+      bindPhotoInputs();
+      updateMetrics();
+    }
+
+    function getAnswer(questionId, field) {
+      return (state.answers[questionId] && state.answers[questionId][field]) || "";
+    }
+
+    function setAnswer(questionId, field, value) {
+      if (!state.answers[questionId]) state.answers[questionId] = {};
+      state.answers[questionId][field] = value;
+    }
+
+    function getMeta() {
+      return Object.fromEntries(new FormData(form).entries());
+    }
+
+    function getData() {
+      return {
+        meta: getMeta(),
+        answers: state.answers,
+        photos: state.photos,
+        signatures: state.signatures,
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    function setData(data) {
+      Object.entries(data.meta || {}).forEach(([key, value]) => {
+        if (form.elements[key]) form.elements[key].value = value;
+      });
+      state.answers = data.answers || {};
+      state.photos = data.photos || {};
+      state.signatures = { engineerSig: (data.signatures && data.signatures.engineerSig) || "" };
+      renderSections();
+      drawSignature("engineerSig");
+    }
+
+    function save(silent = true) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
+      document.getElementById("saveMetric").textContent = new Date().toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" });
+      updateMetrics();
+      if (!silent) showToast("Αποθηκεύτηκε στη συσκευή");
+    }
+
+    function load() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          setData(JSON.parse(raw));
+          showToast("Φορτώθηκε το τελευταίο έντυπο έργου");
+          return;
+        } catch {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+      form.elements.date.value = today();
+      renderSections();
+      save(true);
+    }
+
+    function countPhotos() {
+      return Object.values(state.photos).reduce((sum, list) => sum + list.length, 0);
+    }
+
+    function updateMetrics() {
+      const questions = allQuestions();
+      const answered = questions.filter(q => {
+        const a = state.answers[q.id] || {};
+        return a.status || a.notes || q.placeholders.some((_, i) => a[`quick${i + 1}`]);
+      }).length;
+      const requiredMeta = ["date", "schoolId", "schoolAddress", "engineer"];
+      const metaDone = requiredMeta.filter(name => String(form.elements[name]?.value || "").trim()).length;
+      const progress = Math.round(((answered / questions.length) * 80) + ((metaDone / requiredMeta.length) * 20));
+      document.getElementById("progressMetric").textContent = `${Math.min(progress, 100)}%`;
+      document.getElementById("doneMetric").textContent = `${answered}/${questions.length}`;
+      document.getElementById("photoMetric").textContent = countPhotos();
+      renderSummary();
+    }
+
+    function renderSummary() {
+      const meta = getMeta();
+      const issues = allQuestions().filter(q => getAnswer(q.id, "status") === "Θέμα" || getAnswer(q.id, "status") === "Εκκρεμεί").length;
+      document.getElementById("summaryBox").innerHTML = `
+        <b>${escapeHtml(meta.schoolId || "Χωρίς ID")} - ${escapeHtml(meta.schoolAddress || "Χωρίς διεύθυνση")}</b><br>
+        ${escapeHtml(meta.project || "")}<br>
+        Απαντημένα πεδία: ${document.getElementById("doneMetric").textContent} · Θέματα/εκκρεμότητες: ${issues} · Φωτογραφίες: ${countPhotos()}
+      `;
+    }
+
+    function bindPhotoInputs() {
+      document.querySelectorAll("[data-photo-input]").forEach(input => {
+        input.addEventListener("change", async event => {
+          const questionId = event.target.dataset.photoInput;
+          const files = Array.from(event.target.files || []);
+          for (const file of files) {
+            try {
+              const photo = await compressImage(file);
+              if (!state.photos[questionId]) state.photos[questionId] = [];
+              state.photos[questionId].push({
+                dataUrl: photo.dataUrl,
+                caption: `${file.name} - ${photo.stampedAt}`,
+                stampedAt: photo.stampedAt
+              });
+              renderSections();
+              save(true);
+            } catch {
+              showToast("Δεν μπόρεσε να φορτωθεί μία φωτογραφία");
+            }
+          }
+          event.target.value = "";
+        });
+      });
+    }
+
+    function compressImage(file) {
+      return new Promise((resolve, reject) => {
+        const stampedAt = new Date().toLocaleString("el-GR", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = () => {
+          const img = new Image();
+          img.onerror = reject;
+          img.onload = () => {
+            const scale = Math.min(1, PHOTO_MAX_SIZE / Math.max(img.width, img.height));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(img.width * scale));
+            canvas.height = Math.max(1, Math.round(img.height * scale));
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            addTimestamp(ctx, canvas, stampedAt);
+            resolve({ dataUrl: canvas.toDataURL("image/jpeg", PHOTO_JPEG_QUALITY), stampedAt });
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function addTimestamp(ctx, canvas, stampedAt) {
+      const fontSize = Math.max(18, Math.round(canvas.width * 0.028));
+      const padding = Math.max(12, Math.round(canvas.width * 0.018));
+      ctx.save();
+      ctx.font = `700 ${fontSize}px Arial, Helvetica, sans-serif`;
+      const label = `Ημ/νία λήψης: ${stampedAt}`;
+      const textWidth = ctx.measureText(label).width;
+      const boxHeight = fontSize + padding * 1.5;
+      ctx.fillStyle = "rgba(0, 0, 0, 0.64)";
+      ctx.fillRect(0, canvas.height - boxHeight, Math.min(canvas.width, textWidth + padding * 2), boxHeight);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(label, padding, canvas.height - padding);
+      ctx.restore();
+    }
+
+    function makeReport() {
+      const meta = getMeta();
+      const reportHtml = buildReportHtml(meta);
+      document.getElementById("printReport").innerHTML = reportHtml;
+    }
+
+    function buildReportHtml(meta) {
+      const workDateNames = {
+        energy: "energyWorkDate",
+        water: "waterWorkDate",
+        fuel: "fuelWorkDate"
+      };
+      const sectionHtml = Object.entries(sections).map(([sectionKey, section]) => {
+        const workDate = meta[workDateNames[sectionKey]] || "";
+        const rows = section.questions.map(q => {
+          const a = state.answers[q.id] || {};
+          const quickDetails = q.placeholders.map((label, i) => {
+            const value = a[`quick${i + 1}`];
+            return value ? `<b>${escapeHtml(label)}:</b> ${escapeHtml(value)}` : "";
+          }).filter(Boolean);
+          const details = [...quickDetails, a.notes ? escapeHtml(a.notes) : ""].filter(Boolean).join("<br>");
+          return `<tr><td>${escapeHtml(q.title)}</td><td>${escapeHtml(a.status || "-")}</td><td>${details}</td></tr>`;
+        }).join("");
+        const photos = section.questions.map(q => {
+          const questionPhotos = state.photos[q.id] || [];
+          if (!questionPhotos.length) return "";
+          return `
+            <h2>Φωτογραφίες - ${escapeHtml(q.title)}</h2>
+            <div class="print-photos">
+              ${questionPhotos.map((photo, i) => `
+                <div class="print-photo">
+                  <img src="${photo.dataUrl}" alt="">
+                  <div>${escapeHtml(photo.caption || `Φωτογραφία ${i + 1}`)}</div>
+                </div>
+              `).join("")}
+            </div>
+          `;
+        }).join("");
+        return `
+          <h2>${escapeHtml(section.title)}</h2>
+          ${workDate ? `<p><b>Ημερομηνία εργασίας:</b> ${escapeHtml(workDate)}</p>` : ""}
+          <table class="print-table"><thead><tr><th>Πεδίο</th><th>Κατάσταση</th><th>Καταγραφή</th></tr></thead><tbody>${rows}</tbody></table>
+          ${photos}
+        `;
+      }).join("");
+
+      return `
+        <h1>Έντυπο Έργου</h1>
+        <div class="print-grid">
+          <div><b>Διαδικασία:</b> ${escapeHtml(meta.procedure)}</div>
+          <div><b>Ημερομηνία:</b> ${escapeHtml(meta.date)}</div>
+          <div><b>Έργο:</b> ${escapeHtml(meta.project)}</div>
+          <div><b>Μηχανικός / εταιρεία:</b> ${escapeHtml(meta.engineer)}</div>
+          <div><b>ID σχολείου:</b> ${escapeHtml(meta.schoolId)}</div>
+          <div><b>Διεύθυνση:</b> ${escapeHtml(meta.schoolAddress)}</div>
+          <div><b>Σχολική μονάδα:</b> ${escapeHtml(meta.schoolName)}</div>
+          <div><b>GPS:</b> ${escapeHtml(meta.gps)}</div>
+        </div>
+        ${sectionHtml}
+        <h2>Κλείσιμο</h2>
+        <p><b>Γενική κατάσταση:</b> ${escapeHtml(meta.overallStatus || "-")}</p>
+        <p><b>Ημερομηνία ολοκλήρωσης:</b> ${escapeHtml(meta.completionDate || "-")}</p>
+        <p>${escapeHtml(meta.finalNotes || "")}</p>
+      `;
+    }
+
+    function buildStandaloneReportHtml() {
+      const meta = getMeta();
+      return `<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Έντυπο Έργου - ${escapeHtml(meta.schoolId || "")} ${escapeHtml(meta.schoolAddress || "")}</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; color: #111827; margin: 24px; font-size: 13px; line-height: 1.45; }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    h2 { margin: 20px 0 8px; font-size: 17px; border-bottom: 1px solid #999; padding-bottom: 4px; }
+    .print-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 18px; }
+    .print-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    .print-table th, .print-table td { border: 1px solid #999; padding: 6px; text-align: left; vertical-align: top; }
+    .print-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
+    .print-photo img { width: 100%; height: 210px; object-fit: cover; border: 1px solid #999; }
+    @media print { body { margin: 0; } .print-photo img { height: 155px; } }
+    @media (max-width: 760px) { .print-grid, .print-photos { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+${buildReportHtml(meta)}
+</body>
+</html>`;
+    }
+
+    function exportJson() {
+      const meta = getMeta();
+      const name = `${meta.schoolId || "entypo-ergou"}-${meta.schoolAddress || ""}`.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "");
+      const blob = new Blob([JSON.stringify(getData(), null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${name || "entypo-ergou"}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function sendToOffice() {
+      const button = document.getElementById("sendBtn");
+      save(true);
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Αποστολή...";
+      showToast("Αποθηκεύτηκε στη συσκευή. Γίνεται αποστολή στο γραφείο.");
+
+      try {
+        await fetch(OFFICE_WEB_APP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify({ ...getData(), reportHtml: buildStandaloneReportHtml() })
+        });
+        showToast("Το έντυπο στάλθηκε στο γραφείο.");
+      } catch {
+        showToast("Αποθηκεύτηκε στη συσκευή. Η αποστολή απέτυχε, δοκιμάστε ξανά με internet.");
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+
+    function importJsonFile(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          if (!data.meta || !data.answers) throw new Error("Invalid survey file");
+          setData(data);
+          save(false);
+          showToast("Το έντυπο έργου φορτώθηκε");
+        } catch {
+          showToast("Το JSON δεν είναι αρχείο εντύπου έργου");
+        }
+      };
+      reader.readAsText(file, "utf-8");
+    }
+
+    function setupSignature(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+      let drawing = false;
+
+      function getPoint(event) {
+        const rect = canvas.getBoundingClientRect();
+        const touch = event.touches ? event.touches[0] : event;
+        return {
+          x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+          y: (touch.clientY - rect.top) * (canvas.height / rect.height)
+        };
+      }
+
+      function start(event) {
+        drawing = true;
+        const p = getPoint(event);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        event.preventDefault();
+      }
+
+      function move(event) {
+        if (!drawing) return;
+        const p = getPoint(event);
+        ctx.lineTo(p.x, p.y);
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#18212b";
+        ctx.stroke();
+        event.preventDefault();
+      }
+
+      function end() {
+        if (!drawing) return;
+        drawing = false;
+        state.signatures[canvasId] = canvas.toDataURL("image/png");
+        save(true);
+      }
+
+      canvas.addEventListener("mousedown", start);
+      canvas.addEventListener("mousemove", move);
+      window.addEventListener("mouseup", end);
+      canvas.addEventListener("touchstart", start, { passive: false });
+      canvas.addEventListener("touchmove", move, { passive: false });
+      canvas.addEventListener("touchend", end);
+    }
+
+    function clearSignature(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+      state.signatures[canvasId] = "";
+      save(true);
+    }
+
+    function drawSignature(canvasId) {
+      const dataUrl = state.signatures[canvasId];
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!dataUrl) return;
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      img.src = dataUrl;
+    }
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(item => item.setAttribute("aria-selected", String(item === tab)));
+        document.querySelectorAll(".screen").forEach(screen => screen.classList.toggle("active", screen.id === tab.dataset.tab));
+      });
+    });
+
+    form.addEventListener("input", event => {
+      const question = event.target.closest("[data-question]");
+      if (question && event.target.dataset.field) {
+        setAnswer(question.dataset.question, event.target.dataset.field, event.target.value);
+      }
+      const captionQuestion = event.target.dataset.photoCaption;
+      if (captionQuestion !== undefined) {
+        state.photos[captionQuestion][Number(event.target.dataset.photoIndex)].caption = event.target.value;
+      }
+      save(true);
+    });
+
+    form.addEventListener("click", event => {
+      const removeQuestion = event.target.dataset.removePhoto;
+      if (removeQuestion === undefined) return;
+      state.photos[removeQuestion].splice(Number(event.target.dataset.photoIndex), 1);
+      renderSections();
+      save(true);
+    });
+
+    document.getElementById("locateBtn").addEventListener("click", () => {
+      if (!navigator.geolocation) {
+        showToast("Η συσκευή δεν υποστηρίζει γεωεντοπισμό");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(pos => {
+        const c = pos.coords;
+        document.getElementById("gpsField").value = `${c.latitude.toFixed(6)}, ${c.longitude.toFixed(6)} (±${Math.round(c.accuracy)}m)`;
+        save(false);
+      }, () => showToast("Δεν δόθηκε πρόσβαση στη θέση"));
+    });
+
+    document.getElementById("jsonBtn").addEventListener("click", exportJson);
+    document.getElementById("sendBtn").addEventListener("click", sendToOffice);
+    document.getElementById("importJsonInput").addEventListener("change", event => {
+      const file = event.target.files && event.target.files[0];
+      if (file) importJsonFile(file);
+      event.target.value = "";
+    });
+    document.getElementById("printBtn").addEventListener("click", () => { makeReport(); window.print(); });
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (!confirm("Να καθαριστεί το τρέχον έντυπο έργου από αυτή τη συσκευή;")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      form.reset();
+      state.answers = {};
+      state.photos = {};
+      state.signatures = { engineerSig: "" };
+      clearSignature("engineerSig");
+      form.elements.date.value = today();
+      renderSections();
+      save(true);
+    });
+    document.getElementById("clearEngineerSig").addEventListener("click", () => clearSignature("engineerSig"));
+
+    setupSignature("engineerSig");
+    load();
+    window.addEventListener("beforeunload", () => save(true));
+
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      navigator.serviceWorker.register("./site-survey-sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>
