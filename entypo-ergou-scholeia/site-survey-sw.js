@@ -1,4 +1,4 @@
-const CACHE_NAME = "school-project-form-v3";
+const CACHE_NAME = "school-project-form-v6";
 const APP_SHELL = [
   "./",
   "./site-survey-smart.html",

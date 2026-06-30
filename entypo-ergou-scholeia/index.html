@@ -475,6 +475,12 @@
         object-fit: cover;
         border: 1px solid #999;
       }
+      .print-signature img {
+        width: 320px;
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #999;
+      }
     }
   </style>
 </head>
@@ -787,8 +793,8 @@
       signatures: { engineerSig: "" }
     };
 
-    const PHOTO_MAX_SIZE = 1280;
-    const PHOTO_JPEG_QUALITY = 0.72;
+    const PHOTO_MAX_SIZE = 720;
+    const PHOTO_JPEG_QUALITY = 0.45;
 
     const form = document.getElementById("surveyForm");
     const toast = document.getElementById("toast");
@@ -910,10 +916,16 @@
     }
 
     function save(silent = true) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
-      document.getElementById("saveMetric").textContent = new Date().toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" });
-      updateMetrics();
-      if (!silent) showToast("Αποθηκεύτηκε στη συσκευή");
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
+        document.getElementById("saveMetric").textContent = new Date().toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" });
+        updateMetrics();
+        if (!silent) showToast("Αποθηκεύτηκε στη συσκευή");
+        return true;
+      } catch {
+        showToast("Η μνήμη της συσκευής γέμισε. Βγάλτε PDF/JSON ή αφαιρέστε φωτογραφίες.");
+        return false;
+      }
     }
 
     function load() {
@@ -1094,6 +1106,10 @@
         <p><b>Γενική κατάσταση:</b> ${escapeHtml(meta.overallStatus || "-")}</p>
         <p><b>Ημερομηνία ολοκλήρωσης:</b> ${escapeHtml(meta.completionDate || "-")}</p>
         <p>${escapeHtml(meta.finalNotes || "")}</p>
+        ${state.signatures.engineerSig ? `
+          <h2>Υπογραφή μηχανικού</h2>
+          <div class="print-signature"><img src="${state.signatures.engineerSig}" alt="Υπογραφή μηχανικού"></div>
+        ` : ""}
       `;
     }
 
@@ -1114,6 +1130,7 @@
     .print-table th, .print-table td { border: 1px solid #999; padding: 6px; text-align: left; vertical-align: top; }
     .print-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
     .print-photo img { width: 100%; height: 210px; object-fit: cover; border: 1px solid #999; }
+    .print-signature img { width: 320px; max-width: 100%; height: auto; border: 1px solid #999; }
     @media print { body { margin: 0; } .print-photo img { height: 155px; } }
     @media (max-width: 760px) { .print-grid, .print-photos { grid-template-columns: 1fr; } }
   </style>
@@ -1151,7 +1168,7 @@ ${buildReportHtml(meta)}
           headers: {
             "Content-Type": "text/plain;charset=utf-8"
           },
-          body: JSON.stringify({ ...getData(), reportHtml: buildStandaloneReportHtml() })
+          body: JSON.stringify(getData())
         });
         showToast("Το έντυπο στάλθηκε στο γραφείο.");
       } catch {
