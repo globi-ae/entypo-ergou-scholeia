@@ -268,6 +268,34 @@
       gap: 12px;
     }
 
+    .instance-group {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .instance-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      background: #eef2f7;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .instance-head h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .instance-actions {
+      display: flex;
+      justify-content: flex-start;
+      margin: 12px 0 0;
+    }
+
     .question {
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -520,6 +548,11 @@
         border: 1px solid #aaa;
         break-inside: avoid;
       }
+      .print-instance-title {
+        margin: 14px 0 6px;
+        font-size: 14px;
+        color: #111827;
+      }
       .print-subsection h3 {
         margin: 0 0 6px;
         font-size: 13px;
@@ -717,6 +750,8 @@
     const sections = {
       energy: {
         title: "ΑΝΑΛΥΤΗΣ ΕΝΕΡΓΕΙΑΣ",
+        unitLabel: "Αναλυτής",
+        addLabel: "+ Προσθήκη αναλυτή",
         mount: "energyQuestions",
         questions: [
           {
@@ -779,6 +814,8 @@
       },
       water: {
         title: "ΥΔΡΟΜΕΤΡΟ",
+        unitLabel: "Υδρόμετρο",
+        addLabel: "+ Προσθήκη υδρομέτρου",
         mount: "waterQuestions",
         questions: [
           {
@@ -823,6 +860,8 @@
       },
       fuel: {
         title: "ΘΕΡΜΑΝΣΗ - ΦΥΣΙΚΟ ΑΕΡΙΟ",
+        unitLabel: "Καυστήρας / λέβητας",
+        addLabel: "+ Προσθήκη καυστήρα / λέβητα",
         mount: "fuelQuestions",
         questions: [
           {
@@ -879,7 +918,8 @@
     const state = {
       answers: {},
       photos: {},
-      signatures: { engineerSig: "" }
+      signatures: { engineerSig: "" },
+      instances: { energy: 1, water: 1, fuel: 1 }
     };
 
     const PHOTO_MAX_SIZE = 900;
@@ -916,14 +956,55 @@
     }
 
     function allQuestions() {
-      return Object.values(sections).flatMap(section => section.questions.map(q => ({ ...q, sectionTitle: section.title })));
+      return Object.entries(sections).flatMap(([sectionKey, section]) => {
+        return getSectionInstances(sectionKey).flatMap(instance => {
+          return section.questions.map(q => ({ ...q, id: instanceQuestionId(q.id, instance), baseId: q.id, sectionTitle: section.title }));
+        });
+      });
+    }
+
+    function getSectionInstances(sectionKey) {
+      const count = Math.max(1, Number(state.instances && state.instances[sectionKey]) || 1);
+      return Array.from({ length: count }, (_, index) => index + 1);
+    }
+
+    function instanceQuestionId(questionId, instance) {
+      return instance === 1 ? questionId : `${questionId}__${instance}`;
+    }
+
+    function renderSection(sectionKey, section) {
+      const instances = getSectionInstances(sectionKey);
+      const showInstanceTitles = instances.length > 1;
+      const groups = instances.map(instance => {
+        const questions = section.questions.map((q, i) => {
+          const question = { ...q, id: instanceQuestionId(q.id, instance), baseId: q.id };
+          return renderQuestion(sectionKey, question, i);
+        }).join("");
+        return `
+          <div class="instance-group" data-instance-group="${sectionKey}" data-instance="${instance}">
+            ${showInstanceTitles ? `
+              <div class="instance-head">
+                <h3>${escapeHtml(section.unitLabel)} ${instance}</h3>
+                ${instance === instances.length && instance > 1 ? `<button class="btn danger" type="button" data-remove-instance="${sectionKey}">Διαγραφή</button>` : ""}
+              </div>
+            ` : ""}
+            ${questions}
+          </div>
+        `;
+      }).join("");
+      return `
+        ${groups}
+        <div class="instance-actions">
+          <button class="btn primary" type="button" data-add-instance="${sectionKey}">${escapeHtml(section.addLabel)}</button>
+        </div>
+      `;
     }
 
     function renderQuestion(sectionKey, question, index) {
       const photos = state.photos[question.id] || [];
       const disabledFields = getDisabledFields(question);
       return `
-        <article class="question" data-question="${question.id}" data-section="${sectionKey}">
+        <article class="question" data-question="${question.id}" data-base-question="${question.baseId || question.id}" data-section="${sectionKey}">
           <div class="question-top">
             <span class="qno">${index + 1}</span>
             <div>
@@ -1010,7 +1091,7 @@
 
     function renderSections() {
       Object.entries(sections).forEach(([key, section]) => {
-        document.getElementById(section.mount).innerHTML = section.questions.map((q, i) => renderQuestion(key, q, i)).join("");
+        document.getElementById(section.mount).innerHTML = renderSection(key, section);
       });
       bindPhotoInputs();
       updateMetrics();
@@ -1047,6 +1128,7 @@
         answers: state.answers,
         photos: state.photos,
         signatures: state.signatures,
+        instances: state.instances,
         updatedAt: new Date().toISOString()
       };
     }
@@ -1058,6 +1140,7 @@
       state.answers = data.answers || {};
       state.photos = data.photos || {};
       state.signatures = { engineerSig: (data.signatures && data.signatures.engineerSig) || "" };
+      state.instances = { energy: 1, water: 1, fuel: 1, ...(data.instances || {}) };
       renderSections();
       drawSignature("engineerSig");
     }
@@ -1204,34 +1287,42 @@
       };
       const sectionHtml = Object.entries(sections).map(([sectionKey, section]) => {
         const workDate = meta[workDateNames[sectionKey]] || "";
-        const subsections = section.questions.map(q => {
-          const a = state.answers[q.id] || {};
-          const fields = q.placeholders.map((label, i) => {
-            const value = a[`quick${i + 1}`] || "-";
-            return `<div><b>${escapeHtml(label)}:</b> ${escapeHtml(value)}</div>`;
-          }).join("");
-          const notes = a.notes ? `<div><b>${escapeHtml(q.noteLabel || "Παρατηρήσεις")}:</b> ${escapeHtml(a.notes)}</div>` : "";
-          const questionPhotos = includePhotos ? (state.photos[q.id] || []) : [];
-          const photos = questionPhotos.length ? `
-            <div class="print-photos">
-              ${questionPhotos.map((photo, i) => `
-                <div class="print-photo">
-                  <img src="${photo.dataUrl}" alt="">
-                  <div>${escapeHtml(photo.caption || `Φωτογραφία ${i + 1}`)}</div>
-                </div>
-              `).join("")}
-            </div>
-          ` : "";
-          return `
-            <div class="print-subsection">
-              <h3>${escapeHtml(q.title)}</h3>
-              <div class="print-field-list">
-                <div><b>Κατάσταση:</b> ${escapeHtml(a.status || "-")}</div>
-                ${fields}
-                ${notes}
+        const instances = getSectionInstances(sectionKey);
+        const subsections = instances.map(instance => {
+          const questionsHtml = section.questions.map(q => {
+            const questionId = instanceQuestionId(q.id, instance);
+            const a = state.answers[questionId] || {};
+            const fields = q.placeholders.map((label, i) => {
+              const value = a[`quick${i + 1}`] || "-";
+              return `<div><b>${escapeHtml(label)}:</b> ${escapeHtml(value)}</div>`;
+            }).join("");
+            const notes = a.notes ? `<div><b>${escapeHtml(q.noteLabel || "Παρατηρήσεις")}:</b> ${escapeHtml(a.notes)}</div>` : "";
+            const questionPhotos = includePhotos ? (state.photos[questionId] || []) : [];
+            const photos = questionPhotos.length ? `
+              <div class="print-photos">
+                ${questionPhotos.map((photo, i) => `
+                  <div class="print-photo">
+                    <img src="${photo.dataUrl}" alt="">
+                    <div>${escapeHtml(photo.caption || `Φωτογραφία ${i + 1}`)}</div>
+                  </div>
+                `).join("")}
               </div>
-              ${photos}
-            </div>
+            ` : "";
+            return `
+              <div class="print-subsection">
+                <h3>${escapeHtml(q.title)}</h3>
+                <div class="print-field-list">
+                  <div><b>Κατάσταση:</b> ${escapeHtml(a.status || "-")}</div>
+                  ${fields}
+                  ${notes}
+                </div>
+                ${photos}
+              </div>
+            `;
+          }).join("");
+          return `
+            ${instances.length > 1 ? `<h3 class="print-instance-title">${escapeHtml(section.unitLabel)} ${instance}</h3>` : ""}
+            ${questionsHtml}
           `;
         }).join("");
         return `
@@ -1294,6 +1385,7 @@
     .print-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
     .print-table th, .print-table td { border: 1px solid #999; padding: 6px; text-align: left; vertical-align: top; }
     .print-subsection { margin: 12px 0 8px; padding: 9px; border: 1px solid #aaa; break-inside: avoid; }
+    .print-instance-title { margin: 14px 0 6px; font-size: 14px; color: #111827; }
     .print-subsection h3 { margin: 0 0 6px; font-size: 14px; }
     .print-field-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 14px; }
     .print-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
@@ -1322,6 +1414,86 @@ ${buildReportHtml(meta, true)}
       URL.revokeObjectURL(url);
     }
 
+    function mergeObjectsKeepingNew(existing = {}, incoming = {}) {
+      const merged = { ...existing };
+      Object.entries(incoming).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          merged[key] = value;
+        }
+      });
+      return merged;
+    }
+
+    function mergePhotos(existing = {}, incoming = {}) {
+      const merged = { ...existing };
+      Object.entries(incoming).forEach(([questionId, photos]) => {
+        const current = merged[questionId] || [];
+        const seen = new Set(current.map(photo => photo.dataUrl));
+        const additions = (photos || []).filter(photo => {
+          if (!photo || !photo.dataUrl || seen.has(photo.dataUrl)) return false;
+          seen.add(photo.dataUrl);
+          return true;
+        });
+        merged[questionId] = [...current, ...additions];
+      });
+      return merged;
+    }
+
+    function mergeAnswers(existing = {}, incoming = {}) {
+      const merged = { ...existing };
+      Object.entries(incoming).forEach(([questionId, answer]) => {
+        merged[questionId] = mergeObjectsKeepingNew(merged[questionId] || {}, answer || {});
+      });
+      return merged;
+    }
+
+    function mergeInstances(existing = {}, incoming = {}) {
+      return {
+        energy: Math.max(Number(existing.energy) || 1, Number(incoming.energy) || 1),
+        water: Math.max(Number(existing.water) || 1, Number(incoming.water) || 1),
+        fuel: Math.max(Number(existing.fuel) || 1, Number(incoming.fuel) || 1)
+      };
+    }
+
+    function mergeSurveyData(existing, incoming) {
+      if (!existing || !existing.meta) return incoming;
+      return {
+        meta: mergeObjectsKeepingNew(existing.meta, incoming.meta),
+        answers: mergeAnswers(existing.answers || {}, incoming.answers || {}),
+        photos: mergePhotos(existing.photos || {}, incoming.photos || {}),
+        signatures: mergeObjectsKeepingNew(existing.signatures || {}, incoming.signatures || {}),
+        instances: mergeInstances(existing.instances || {}, incoming.instances || {}),
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    async function loadOfficeData(schoolId) {
+      return new Promise(resolve => {
+        const callbackName = `officeData_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        const script = document.createElement("script");
+        const cleanup = () => {
+          delete window[callbackName];
+          script.remove();
+        };
+        const timer = setTimeout(() => {
+          cleanup();
+          resolve(null);
+        }, 8000);
+        window[callbackName] = result => {
+          clearTimeout(timer);
+          cleanup();
+          resolve(result && result.ok && result.data ? result.data : null);
+        };
+        script.onerror = () => {
+          clearTimeout(timer);
+          cleanup();
+          resolve(null);
+        };
+        script.src = `${OFFICE_WEB_APP_URL}?schoolId=${encodeURIComponent(schoolId)}&callback=${encodeURIComponent(callbackName)}`;
+        document.body.appendChild(script);
+      });
+    }
+
     async function sendToOffice() {
       const button = document.getElementById("sendBtn");
       const schoolId = normalizeSchoolId(form.elements.schoolId.value);
@@ -1339,13 +1511,25 @@ ${buildReportHtml(meta, true)}
       showToast("Αποθηκεύτηκε στη συσκευή. Γίνεται αποστολή στο γραφείο.");
 
       try {
+        let payload = getData();
+        try {
+          const existingData = await loadOfficeData(schoolId);
+          if (existingData) {
+            payload = mergeSurveyData(existingData, payload);
+            setData(payload);
+            form.elements.schoolId.value = schoolId;
+            save(true);
+          }
+        } catch {
+          payload = getData();
+        }
         await fetch(OFFICE_WEB_APP_URL, {
           method: "POST",
           mode: "no-cors",
           headers: {
             "Content-Type": "text/plain;charset=utf-8"
           },
-          body: JSON.stringify({ ...getData(), reportHtml: buildStandaloneReportHtml() })
+          body: JSON.stringify({ ...payload, reportHtml: buildStandaloneReportHtml() })
         });
         showToast("Το έντυπο στάλθηκε στο γραφείο.");
       } catch {
@@ -1461,12 +1645,34 @@ ${buildReportHtml(meta, true)}
     });
 
     form.addEventListener("click", event => {
+      const addInstance = event.target.dataset.addInstance;
+      if (addInstance) {
+        state.instances[addInstance] = (Number(state.instances[addInstance]) || 1) + 1;
+        renderSections();
+        save(true);
+        return;
+      }
+
+      const removeInstance = event.target.dataset.removeInstance;
+      if (removeInstance) {
+        const count = Number(state.instances[removeInstance]) || 1;
+        if (count <= 1) return;
+        if (!confirm("Να διαγραφεί η τελευταία πρόσθετη εγκατάσταση αυτής της ενότητας;")) return;
+        removeSectionInstanceData(removeInstance, count);
+        state.instances[removeInstance] = count - 1;
+        renderSections();
+        save(true);
+        return;
+      }
+
       const choiceButton = event.target.closest("[data-choice-field]");
       if (choiceButton) {
         const question = choiceButton.closest("[data-question]");
         const questionId = question.dataset.question;
         const sectionKey = question.dataset.section;
-        const questionDef = sections[sectionKey].questions.find(q => q.id === questionId);
+        const baseQuestionId = question.dataset.baseQuestion;
+        const baseQuestionDef = sections[sectionKey].questions.find(q => q.id === baseQuestionId);
+        const questionDef = baseQuestionDef ? { ...baseQuestionDef, id: questionId } : null;
         setAnswer(questionId, choiceButton.dataset.choiceField, choiceButton.dataset.choiceValue);
         clearDisabledAnswers(questionDef);
         renderSections();
@@ -1480,6 +1686,14 @@ ${buildReportHtml(meta, true)}
       renderSections();
       save(true);
     });
+
+    function removeSectionInstanceData(sectionKey, instance) {
+      sections[sectionKey].questions.forEach(question => {
+        const id = instanceQuestionId(question.id, instance);
+        delete state.answers[id];
+        delete state.photos[id];
+      });
+    }
 
     function clearDisabledAnswers(question) {
       if (!question || !question.disableWhen) return;
@@ -1517,6 +1731,7 @@ ${buildReportHtml(meta, true)}
       state.answers = {};
       state.photos = {};
       state.signatures = { engineerSig: "" };
+      state.instances = { energy: 1, water: 1, fuel: 1 };
       clearSignature("engineerSig");
       form.elements.date.value = today();
       renderSections();
