@@ -589,7 +589,7 @@
               <label class="field"><span>Ημερομηνία</span><input name="date" type="date"></label>
               <label class="field"><span>Έργο</span><input name="project" value="Ολοκληρωμένο Σύστημα Εξοικονόμησης Πόρων Σχολικών Κτηρίων και Υποδομών"></label>
               <label class="field"><span>Μηχανικός / εταιρεία</span><input name="engineer" placeholder="Ονοματεπώνυμο ή εταιρεία"></label>
-              <label class="field"><span>ID σχολείου</span><input name="schoolId" placeholder="π.χ. A15"></label>
+              <label class="field"><span>ID σχολείου <span class="required-mark">Υποχρεωτικό</span></span><input name="schoolId" placeholder="π.χ. Α8 ή Α15" required></label>
               <label class="field"><span>Διεύθυνση σχολείου</span><input name="schoolAddress" placeholder="π.χ. Εγνατίας 132"></label>
               <label class="field"><span>Σχολική μονάδα</span><input name="schoolName" placeholder="π.χ. 133ο Δημοτικό"></label>
               <label class="field"><span>Δήμος</span><input name="municipality" value="Θεσσαλονίκης"></label>
@@ -980,7 +980,19 @@
     }
 
     function getMeta() {
-      return Object.fromEntries(new FormData(form).entries());
+      const meta = Object.fromEntries(new FormData(form).entries());
+      meta.schoolId = normalizeSchoolId(meta.schoolId);
+      return meta;
+    }
+
+    function normalizeSchoolId(value) {
+      return String(value || "")
+        .trim()
+        .toUpperCase()
+        .replace(/^A/, "Α")
+        .replace(/^B/, "Β")
+        .replace(/^G/, "Γ")
+        .replace(/^D/, "Δ");
     }
 
     function getData() {
@@ -1256,6 +1268,14 @@ ${buildReportHtml(meta, true)}
 
     async function sendToOffice() {
       const button = document.getElementById("sendBtn");
+      const schoolId = normalizeSchoolId(form.elements.schoolId.value);
+      if (!schoolId) {
+        showToast("Συμπληρώστε πρώτα το ID σχολείου.");
+        document.querySelector('[data-tab="meta"]').click();
+        form.elements.schoolId.focus();
+        return;
+      }
+      form.elements.schoolId.value = schoolId;
       save(true);
       const originalText = button.textContent;
       button.disabled = true;
@@ -1370,6 +1390,9 @@ ${buildReportHtml(meta, true)}
     });
 
     form.addEventListener("input", event => {
+      if (event.target.name === "schoolId") {
+        event.target.value = normalizeSchoolId(event.target.value);
+      }
       const question = event.target.closest("[data-question]");
       if (question && event.target.dataset.field) {
         setAnswer(question.dataset.question, event.target.dataset.field, event.target.value);
