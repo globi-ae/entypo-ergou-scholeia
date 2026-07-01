@@ -506,8 +506,9 @@
       }
       .print-photo img {
         width: 100%;
-        height: 155px;
-        object-fit: cover;
+        height: auto;
+        max-height: 230px;
+        object-fit: contain;
         border: 1px solid #999;
       }
       .print-signature img {
@@ -834,8 +835,8 @@
       signatures: { engineerSig: "" }
     };
 
-    const PHOTO_MAX_SIZE = 720;
-    const PHOTO_JPEG_QUALITY = 0.45;
+    const PHOTO_MAX_SIZE = 900;
+    const PHOTO_JPEG_QUALITY = 0.55;
 
     const form = document.getElementById("surveyForm");
     const toast = document.getElementById("toast");
@@ -1199,9 +1200,9 @@
     .print-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
     .print-table th, .print-table td { border: 1px solid #999; padding: 6px; text-align: left; vertical-align: top; }
     .print-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
-    .print-photo img { width: 100%; height: 210px; object-fit: cover; border: 1px solid #999; }
+    .print-photo img { width: 100%; height: auto; max-height: 280px; object-fit: contain; border: 1px solid #999; }
     .print-signature img { width: 320px; max-width: 100%; height: auto; border: 1px solid #999; }
-    @media print { body { margin: 0; } .print-photo img { height: 155px; } }
+    @media print { body { margin: 0; } .print-photo img { height: auto; max-height: 230px; } }
     @media (max-width: 760px) { .print-grid, .print-photos { grid-template-columns: 1fr; } }
   </style>
 </head>
