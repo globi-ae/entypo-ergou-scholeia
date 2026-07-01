@@ -341,6 +341,41 @@
       gap: 10px;
     }
 
+    .choice-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .choice-btn {
+      border: 1px solid #c8d2dc;
+      background: #fff;
+      color: var(--ink);
+      min-height: 42px;
+      border-radius: 6px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .choice-btn.selected.yes {
+      background: #dcfce7;
+      border-color: #86efac;
+      color: var(--green);
+    }
+
+    .choice-btn.selected.no {
+      background: #edf2f7;
+      border-color: #cbd5e1;
+      color: #475569;
+    }
+
+    input:disabled, textarea:disabled {
+      background: #f1f5f9;
+      color: #94a3b8;
+      cursor: not-allowed;
+    }
+
     .photo-strip {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -672,6 +707,7 @@
             hint: "Καταγραφή σημείου εγκατάστασης, μετασχηματιστών και λειτουργικού ελέγχου.",
             placeholders: ["Σημείο εγκατάστασης", "Τύπος μετασχηματιστών", "Έλεγχος λειτουργίας"],
             inputHints: ["", "π.χ. 100Α ή 125Α", ""],
+            fieldOptions: { quick3: ["Έγινε", "Δεν έγινε"] },
             noteLabel: "Παρατηρήσεις",
             notePlaceholder: "Παρατηρήσεις εγκατάστασης, φωτογραφιών πριν/μετά ή λειτουργικού ελέγχου",
             photo: true
@@ -714,6 +750,7 @@
             hint: "Καταγραφή σημείου εγκατάστασης, διατομής/συνδέσεων και λειτουργικού ελέγχου.",
             placeholders: ["Σημείο εγκατάστασης", "Διατομή υδρομέτρου", "Έλεγχος λειτουργίας"],
             inputHints: ["", "π.χ. DN25 ή DN32", ""],
+            fieldOptions: { quick3: ["Έγινε", "Δεν έγινε"] },
             noteLabel: "Παρατηρήσεις",
             notePlaceholder: "Παρατηρήσεις εγκατάστασης, φωτογραφιών πριν/μετά ή λειτουργικού ελέγχου",
             photo: true
@@ -754,6 +791,7 @@
             hint: "Καταγραφή του τρόπου που χειριζόταν το σχολείο τη θέρμανση πριν τη δική μας επέμβαση.",
             placeholders: ["Υφιστάμενη εγκατάσταση απομακρυσμένου χειρισμού", "Τρόπος χειρισμού", "Παρατήρηση"],
             inputHints: ["ΝΑΙ ή ΟΧΙ", "", ""],
+            fieldOptions: { quick1: ["ΝΑΙ", "ΟΧΙ"] },
             photo: false,
             notes: false
           },
@@ -763,6 +801,8 @@
             hint: "Καταγραφή αν υπάρχει θερμοστάτης, σε ποιο χώρο βρίσκεται και αν λειτουργεί.",
             placeholders: ["Υπάρχει;", "Χώρος", "Λειτουργικός;"],
             inputHints: ["ΝΑΙ ή ΟΧΙ", "", "ΝΑΙ ή ΟΧΙ"],
+            fieldOptions: { quick1: ["ΝΑΙ", "ΟΧΙ"], quick3: ["ΝΑΙ", "ΟΧΙ"] },
+            disableWhen: { field: "quick1", value: "ΟΧΙ", fields: ["quick2", "quick3"] },
             photo: true,
             notes: false
           },
@@ -771,6 +811,7 @@
             title: "Εγκατάσταση δικού μας Θερμοστάτη",
             hint: "Καταγραφή θέσης θερμοστάτη, καλωδίωσης και θέσης εγκατάστασης Fibaro.",
             placeholders: ["Μέρος", "Καλωδίωση", "Εγκατάσταση Fibaro - μέρος", "Έλεγχος λειτουργίας"],
+            fieldOptions: { quick4: ["Έγινε", "Δεν έγινε"] },
             noteLabel: "Παρατηρήσεις",
             notePlaceholder: "Παρατηρήσεις εγκατάστασης, σύνδεσης, δοκιμής ή ειδικών συνθηκών",
             photo: true
@@ -827,6 +868,7 @@
 
     function renderQuestion(sectionKey, question, index) {
       const photos = state.photos[question.id] || [];
+      const disabledFields = getDisabledFields(question);
       return `
         <article class="question" data-question="${question.id}" data-section="${sectionKey}">
           <div class="question-top">
@@ -841,12 +883,7 @@
           </div>
           <div class="question-body">
             <div class="quick-grid">
-              ${question.placeholders.map((label, i) => `
-                <label class="field">
-                  <span>${escapeHtml(label)}</span>
-                  <input data-field="quick${i + 1}" value="${escapeHtml(getAnswer(question.id, `quick${i + 1}`))}" placeholder="${escapeHtml((question.inputHints && question.inputHints[i]) || "")}">
-                </label>
-              `).join("")}
+              ${question.placeholders.map((label, i) => renderQuickField(question, label, i, disabledFields)).join("")}
             </div>
             ${question.notes === false ? "" : `
               <label class="field">
@@ -870,6 +907,39 @@
             </div>
           </div>
         </article>
+      `;
+    }
+
+    function getDisabledFields(question) {
+      if (!question.disableWhen) return new Set();
+      const current = getAnswer(question.id, question.disableWhen.field);
+      return current === question.disableWhen.value ? new Set(question.disableWhen.fields) : new Set();
+    }
+
+    function renderQuickField(question, label, index, disabledFields) {
+      const field = `quick${index + 1}`;
+      const value = getAnswer(question.id, field);
+      const disabled = disabledFields.has(field);
+      const options = question.fieldOptions && question.fieldOptions[field];
+      if (options) {
+        return `
+          <div class="field">
+            <span>${escapeHtml(label)}</span>
+            <div class="choice-buttons" role="group" aria-label="${escapeHtml(label)}">
+              ${options.map(option => {
+                const selected = value === option;
+                const tone = option === "ΝΑΙ" || option === "Έγινε" ? "yes" : "no";
+                return `<button class="choice-btn ${selected ? `selected ${tone}` : ""}" type="button" data-choice-field="${field}" data-choice-value="${escapeHtml(option)}" ${disabled ? "disabled" : ""}>${escapeHtml(option)}</button>`;
+              }).join("")}
+            </div>
+          </div>
+        `;
+      }
+      return `
+        <label class="field">
+          <span>${escapeHtml(label)}</span>
+          <input data-field="${field}" value="${escapeHtml(value)}" placeholder="${escapeHtml((question.inputHints && question.inputHints[index]) || "")}" ${disabled ? "disabled" : ""}>
+        </label>
       `;
     }
 
@@ -1045,11 +1115,11 @@
 
     function makeReport() {
       const meta = getMeta();
-      const reportHtml = buildReportHtml(meta);
+      const reportHtml = buildReportHtml(meta, true);
       document.getElementById("printReport").innerHTML = reportHtml;
     }
 
-    function buildReportHtml(meta) {
+    function buildReportHtml(meta, includePhotos = true) {
       const workDateNames = {
         energy: "energyWorkDate",
         water: "waterWorkDate",
@@ -1066,7 +1136,7 @@
           const details = [...quickDetails, a.notes ? escapeHtml(a.notes) : ""].filter(Boolean).join("<br>");
           return `<tr><td>${escapeHtml(q.title)}</td><td>${escapeHtml(a.status || "-")}</td><td>${details}</td></tr>`;
         }).join("");
-        const photos = section.questions.map(q => {
+        const photos = includePhotos ? section.questions.map(q => {
           const questionPhotos = state.photos[q.id] || [];
           if (!questionPhotos.length) return "";
           return `
@@ -1080,7 +1150,7 @@
               `).join("")}
             </div>
           `;
-        }).join("");
+        }).join("") : "";
         return `
           <h2>${escapeHtml(section.title)}</h2>
           ${workDate ? `<p><b>Ημερομηνία εργασίας:</b> ${escapeHtml(workDate)}</p>` : ""}
@@ -1136,7 +1206,9 @@
   </style>
 </head>
 <body>
-${buildReportHtml(meta)}
+${buildReportHtml(meta, false)}
+<h2>Φωτογραφίες</h2>
+<p>Οι φωτογραφίες της υποβολής αποθηκεύονται στον αντίστοιχο φάκελο φωτογραφιών στο Google Drive.</p>
 </body>
 </html>`;
     }
@@ -1168,7 +1240,7 @@ ${buildReportHtml(meta)}
           headers: {
             "Content-Type": "text/plain;charset=utf-8"
           },
-          body: JSON.stringify(getData())
+          body: JSON.stringify({ ...getData(), reportHtml: buildStandaloneReportHtml() })
         });
         showToast("Το έντυπο στάλθηκε στο γραφείο.");
       } catch {
@@ -1281,12 +1353,34 @@ ${buildReportHtml(meta)}
     });
 
     form.addEventListener("click", event => {
+      const choiceButton = event.target.closest("[data-choice-field]");
+      if (choiceButton) {
+        const question = choiceButton.closest("[data-question]");
+        const questionId = question.dataset.question;
+        const sectionKey = question.dataset.section;
+        const questionDef = sections[sectionKey].questions.find(q => q.id === questionId);
+        setAnswer(questionId, choiceButton.dataset.choiceField, choiceButton.dataset.choiceValue);
+        clearDisabledAnswers(questionDef);
+        renderSections();
+        save(true);
+        return;
+      }
+
       const removeQuestion = event.target.dataset.removePhoto;
       if (removeQuestion === undefined) return;
       state.photos[removeQuestion].splice(Number(event.target.dataset.photoIndex), 1);
       renderSections();
       save(true);
     });
+
+    function clearDisabledAnswers(question) {
+      if (!question || !question.disableWhen) return;
+      const current = getAnswer(question.id, question.disableWhen.field);
+      if (current !== question.disableWhen.value) return;
+      question.disableWhen.fields.forEach(field => {
+        if (state.answers[question.id]) state.answers[question.id][field] = "";
+      });
+    }
 
     document.getElementById("locateBtn").addEventListener("click", () => {
       if (!navigator.geolocation) {
