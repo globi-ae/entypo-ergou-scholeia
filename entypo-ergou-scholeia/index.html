@@ -53,21 +53,6 @@
       align-items: center;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      min-width: 0;
-    }
-
-    .app-logo {
-      width: min(300px, 42vw);
-      max-height: 56px;
-      object-fit: contain;
-      object-position: center center;
-      flex: 0 0 auto;
-    }
-
     .brand-title {
       min-width: 0;
     }
@@ -477,12 +462,6 @@
 
     @media (max-width: 820px) {
       .topbar { grid-template-columns: 1fr; }
-      .brand {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .app-logo { width: min(260px, 80vw); }
       .toolbar { justify-content: stretch; }
       .toolbar .btn { flex: 1 1 auto; }
       .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -502,20 +481,10 @@
         font-size: 12px;
       }
       .print-official-header {
-        display: grid;
-        grid-template-columns: 220px 1fr;
-        gap: 16px;
-        align-items: center;
+        display: block;
         border-bottom: 2px solid #111827;
         padding-bottom: 10px;
         margin-bottom: 12px;
-      }
-      .print-logo {
-        width: 220px;
-        max-height: 58px;
-        object-fit: contain;
-        object-position: center center;
-        justify-self: center;
       }
       .print-doc-meta {
         display: grid;
@@ -577,10 +546,16 @@
         border: 1px solid #999;
       }
       .print-signature img {
-        width: 320px;
+        width: 210px;
         max-width: 100%;
         height: auto;
-        border: 1px solid #999;
+        border: 1px solid #ccc;
+      }
+      .print-signature-title {
+        margin: 18px 0 5px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #374151;
       }
     }
   </style>
@@ -588,8 +563,7 @@
 <body>
   <header>
     <div class="topbar">
-      <div class="brand">
-        <img class="app-logo" src="./logo.png" alt="Λογότυπο">
+      <div>
         <div class="brand-title">
         <h1>Έντυπο Έργου Σχολείων Θεσσαλονίκης</h1>
         <p class="subtitle">Δράση Δ - Ολοκληρωμένο Σύστημα Εξοικονόμησης Πόρων Σχολικών Κτηρίων και Υποδομών</p>
@@ -638,7 +612,7 @@
               <label class="field"><span>Διαδικασία</span><input name="procedure" value="Έντυπο Έργου"></label>
               <label class="field"><span>Ημερομηνία</span><input name="date" type="date"></label>
               <label class="field"><span>Έργο</span><input name="project" value="Ολοκληρωμένο Σύστημα Εξοικονόμησης Πόρων Σχολικών Κτηρίων και Υποδομών"></label>
-              <label class="field"><span>Μηχανικός / εταιρεία</span><input name="engineer" placeholder="Ονοματεπώνυμο ή εταιρεία"></label>
+              <label class="field"><span>Υπεργολάβος</span><input name="engineer" placeholder="Ονοματεπώνυμο ή εταιρεία"></label>
               <label class="field"><span>ID σχολείου <span class="required-mark">Υποχρεωτικό</span></span><input name="schoolId" placeholder="π.χ. Α8 ή Α15" required></label>
               <label class="field"><span>Διεύθυνση σχολείου</span><input name="schoolAddress" placeholder="π.χ. Εγνατίας 132"></label>
               <label class="field"><span>Σχολική μονάδα</span><input name="schoolName" placeholder="π.χ. 133ο Δημοτικό"></label>
@@ -717,10 +691,10 @@
             </div>
             <label class="field" style="margin-top:12px"><span>Τελική σύνοψη / εκκρεμότητες</span><textarea name="finalNotes" placeholder="Συνοπτική περιγραφή εργασιών, περιορισμών και εκκρεμοτήτων"></textarea></label>
             <div class="grid" style="margin-top:12px">
-              <label class="field"><span>Υπογραφή μηχανικού</span><canvas class="signature-pad" id="engineerSig" width="720" height="220"></canvas></label>
+              <label class="field"><span>Υπογραφή υπεργολάβου</span><canvas class="signature-pad" id="engineerSig" width="720" height="220"></canvas></label>
             </div>
             <div class="row-actions" style="justify-content:flex-start;margin-top:10px">
-              <button class="btn" type="button" id="clearEngineerSig">Καθαρισμός μηχανικού</button>
+              <button class="btn" type="button" id="clearEngineerSig">Καθαρισμός υπογραφής</button>
             </div>
           </div>
         </div>
@@ -749,7 +723,8 @@
             id: "deddie_meter",
             title: "Μετρητής ΔΕΔΔΗΕ",
             hint: "Καταγραφή αριθμού παροχής και έλεγχος αν ταυτίζεται με τη λίστα.",
-            placeholders: ["Αριθμός παροχής", "Ταυτίζεται;", "Παρατήρηση"],
+            placeholders: ["Αριθμός παροχής", "Ταυτίζεται", "Παρατήρηση"],
+            fieldOptions: { quick2: ["ΝΑΙ", "ΟΧΙ"] },
             photo: true,
             notes: false
           },
@@ -909,8 +884,6 @@
 
     const PHOTO_MAX_SIZE = 900;
     const PHOTO_JPEG_QUALITY = 0.55;
-    const FORM_VERSION = "1.0 - 01/07/2026";
-    const COMPANY_LOGO_DATA_URL = new URL("logo.png", location.href).href;
 
     const form = document.getElementById("surveyForm");
     const toast = document.getElementById("toast");
@@ -921,23 +894,9 @@
       return d.toISOString().slice(0, 10);
     }
 
-    function formatDateTime(date = new Date()) {
-      return date.toLocaleString("el-GR", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    }
-
     function buildDocumentCode(meta) {
-      const now = new Date();
-      const stamp = now.toISOString()
-        .replace(/[-:]/g, "")
-        .replace(/\..+/, "")
-        .replace("T", "-");
-      return `${meta.schoolId || "ΧΩΡΙΣ-ID"}-${stamp}`;
+      const dateCode = String(meta.date || today()).replaceAll("-", "");
+      return `${meta.schoolId || "ΧΩΡΙΣ-ID"}-${dateCode}`;
     }
 
     function escapeHtml(value) {
@@ -1283,18 +1242,15 @@
       }).join("");
 
       const documentCode = buildDocumentCode(meta);
-      const generatedAt = formatDateTime();
 
       return `
         <div class="print-official-header">
-          <img class="print-logo" src="${COMPANY_LOGO_DATA_URL}" alt="Λογότυπο">
           <div>
             <h1>Έντυπο Έργου Σχολείων Θεσσαλονίκης</h1>
             <div class="print-doc-meta">
               <div><b>Αρ. εντύπου:</b> ${escapeHtml(documentCode)}</div>
-              <div><b>Έκδοση:</b> ${escapeHtml(FORM_VERSION)}</div>
+              <div><b>Εταιρεία:</b> Globiled - Globismart</div>
               <div><b>ID σχολείου:</b> ${escapeHtml(meta.schoolId || "-")}</div>
-              <div><b>Ώρα παραγωγής:</b> ${escapeHtml(generatedAt)}</div>
             </div>
           </div>
         </div>
@@ -1302,7 +1258,7 @@
           <div><b>Διαδικασία:</b> ${escapeHtml(meta.procedure)}</div>
           <div><b>Ημερομηνία:</b> ${escapeHtml(meta.date)}</div>
           <div><b>Έργο:</b> ${escapeHtml(meta.project)}</div>
-          <div><b>Μηχανικός / εταιρεία:</b> ${escapeHtml(meta.engineer)}</div>
+          <div><b>Υπεργολάβος:</b> ${escapeHtml(meta.engineer)}</div>
           <div><b>ID σχολείου:</b> ${escapeHtml(meta.schoolId)}</div>
           <div><b>Διεύθυνση:</b> ${escapeHtml(meta.schoolAddress)}</div>
           <div><b>Σχολική μονάδα:</b> ${escapeHtml(meta.schoolName)}</div>
@@ -1314,8 +1270,8 @@
         <p><b>Ημερομηνία ολοκλήρωσης:</b> ${escapeHtml(meta.completionDate || "-")}</p>
         <p>${escapeHtml(meta.finalNotes || "")}</p>
         ${state.signatures.engineerSig ? `
-          <h2>Υπογραφή μηχανικού</h2>
-          <div class="print-signature"><img src="${state.signatures.engineerSig}" alt="Υπογραφή μηχανικού"></div>
+          <div class="print-signature-title">Υπογραφή υπεργολάβου</div>
+          <div class="print-signature"><img src="${state.signatures.engineerSig}" alt="Υπογραφή υπεργολάβου"></div>
         ` : ""}
       `;
     }
@@ -1330,8 +1286,7 @@
   <title>Έντυπο Έργου - ${escapeHtml(meta.schoolId || "")} ${escapeHtml(meta.schoolAddress || "")}</title>
   <style>
     body { font-family: Arial, Helvetica, sans-serif; color: #111827; margin: 24px; font-size: 13px; line-height: 1.45; }
-    .print-official-header { display: grid; grid-template-columns: 220px 1fr; gap: 16px; align-items: center; border-bottom: 2px solid #111827; padding-bottom: 10px; margin-bottom: 12px; }
-    .print-logo { width: 220px; max-height: 58px; object-fit: contain; object-position: left center; }
+    .print-official-header { display: block; border-bottom: 2px solid #111827; padding-bottom: 10px; margin-bottom: 12px; }
     .print-doc-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 12px; font-size: 11px; }
     h1 { margin: 0 0 10px; font-size: 24px; }
     h2 { margin: 20px 0 8px; font-size: 17px; border-bottom: 1px solid #999; padding-bottom: 4px; }
@@ -1343,7 +1298,8 @@
     .print-field-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 14px; }
     .print-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
     .print-photo img { width: 100%; height: auto; max-height: 280px; object-fit: contain; border: 1px solid #999; }
-    .print-signature img { width: 320px; max-width: 100%; height: auto; border: 1px solid #999; }
+    .print-signature img { width: 210px; max-width: 100%; height: auto; border: 1px solid #ccc; }
+    .print-signature-title { margin: 18px 0 5px; font-size: 12px; font-weight: 700; color: #374151; }
     @media print { body { margin: 0; } .print-photo img { height: auto; max-height: 230px; } }
     @media (max-width: 760px) { .print-official-header, .print-grid, .print-photos, .print-field-list { grid-template-columns: 1fr; } }
   </style>
