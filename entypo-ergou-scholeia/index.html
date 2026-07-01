@@ -64,7 +64,7 @@
       width: min(300px, 42vw);
       max-height: 56px;
       object-fit: contain;
-      object-position: left center;
+      object-position: center center;
       flex: 0 0 auto;
     }
 
@@ -514,7 +514,8 @@
         width: 220px;
         max-height: 58px;
         object-fit: contain;
-        object-position: left center;
+        object-position: center center;
+        justify-self: center;
       }
       .print-doc-meta {
         display: grid;
@@ -765,6 +766,7 @@
             title: "Ανάλυση ηλεκτρολογικού πίνακα",
             hint: "Συμπλήρωση βασικών τεχνικών στοιχείων πίνακα και παροχής.",
             placeholders: ["Τοποθεσία - όροφος", "Γενικός διακόπτης", "Διατομή καλωδίων"],
+            selectOptions: { quick1: ["Υπόγειο", "Ισόγειο", "1ος όροφος", "2ος όροφος"] },
             noteLabel: "Παρατηρήσεις",
             notePlaceholder: "Παρατηρήσεις για πίνακα, πρόσβαση, ασφάλεια ή ειδικές συνθήκες",
             photo: true
@@ -775,6 +777,7 @@
             hint: "Καταγραφή σημείου εγκατάστασης, μετασχηματιστών και λειτουργικού ελέγχου.",
             placeholders: ["Σημείο εγκατάστασης", "Τύπος μετασχηματιστών", "Έλεγχος λειτουργίας"],
             inputHints: ["", "π.χ. 100Α ή 125Α", ""],
+            selectOptions: { quick2: ["75Α", "100Α", "125Α", "150Α", "200Α", "250Α", "300Α", "400Α"] },
             fieldOptions: { quick3: ["Έγινε", "Δεν έγινε"] },
             noteLabel: "Παρατηρήσεις",
             notePlaceholder: "Παρατηρήσεις εγκατάστασης, φωτογραφιών πριν/μετά ή λειτουργικού ελέγχου",
@@ -785,6 +788,7 @@
             title: "Σήμα Wi-Fi και κινητής στο σημείο αναλυτή",
             hint: "Καταγραφή ssid, password εφόσον δίνεται, πάροχος και ισχύς σήματος.",
             placeholders: ["Wi-Fi / ssid", "Κινητή / πάροχος", "Ισχύς / password / σχόλιο"],
+            selectOptions: { quick2: ["Vodafone", "Cosmote", "Nova"] },
             photo: false,
             notes: false
           },
@@ -828,6 +832,7 @@
             title: "Σήμα κινητής στο σημείο υδρομέτρου",
             hint: "Πάροχος και ισχύς σήματος στο φρεάτιο, λεβητοστάσιο ή άλλο σημείο εγκατάστασης.",
             placeholders: ["Πάροχος", "Τεχνολογία / γραμμές", "Παρατήρηση"],
+            selectOptions: { quick1: ["Vodafone", "Cosmote", "Nova"] },
             photo: false,
             notes: false
           },
@@ -905,7 +910,7 @@
     const PHOTO_MAX_SIZE = 900;
     const PHOTO_JPEG_QUALITY = 0.55;
     const FORM_VERSION = "1.0 - 01/07/2026";
-    const COMPANY_LOGO_DATA_URL = "https://globi-ae.github.io/entypo-ergou-scholeia/entypo-ergou-scholeia/logo.png";
+    const COMPANY_LOGO_DATA_URL = new URL("logo.png", location.href).href;
 
     const form = document.getElementById("surveyForm");
     const toast = document.getElementById("toast");
@@ -1009,6 +1014,18 @@
       const field = `quick${index + 1}`;
       const value = getAnswer(question.id, field);
       const disabled = disabledFields.has(field);
+      const selectOptions = question.selectOptions && question.selectOptions[field];
+      if (selectOptions) {
+        return `
+          <label class="field">
+            <span>${escapeHtml(label)}</span>
+            <select data-field="${field}" ${disabled ? "disabled" : ""}>
+              <option value="">Επιλογή</option>
+              ${selectOptions.map(option => `<option value="${escapeHtml(option)}" ${value === option ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}
+            </select>
+          </label>
+        `;
+      }
       const options = question.fieldOptions && question.fieldOptions[field];
       if (options) {
         return `
@@ -1235,22 +1252,8 @@
             return `<div><b>${escapeHtml(label)}:</b> ${escapeHtml(value)}</div>`;
           }).join("");
           const notes = a.notes ? `<div><b>${escapeHtml(q.noteLabel || "Παρατηρήσεις")}:</b> ${escapeHtml(a.notes)}</div>` : "";
-          return `
-            <div class="print-subsection">
-              <h3>${escapeHtml(q.title)}</h3>
-              <div class="print-field-list">
-                <div><b>Κατάσταση:</b> ${escapeHtml(a.status || "-")}</div>
-                ${fields}
-                ${notes}
-              </div>
-            </div>
-          `;
-        }).join("");
-        const photos = includePhotos ? section.questions.map(q => {
-          const questionPhotos = state.photos[q.id] || [];
-          if (!questionPhotos.length) return "";
-          return `
-            <h2>Φωτογραφίες - ${escapeHtml(q.title)}</h2>
+          const questionPhotos = includePhotos ? (state.photos[q.id] || []) : [];
+          const photos = questionPhotos.length ? `
             <div class="print-photos">
               ${questionPhotos.map((photo, i) => `
                 <div class="print-photo">
@@ -1259,13 +1262,23 @@
                 </div>
               `).join("")}
             </div>
+          ` : "";
+          return `
+            <div class="print-subsection">
+              <h3>${escapeHtml(q.title)}</h3>
+              <div class="print-field-list">
+                <div><b>Κατάσταση:</b> ${escapeHtml(a.status || "-")}</div>
+                ${fields}
+                ${notes}
+              </div>
+              ${photos}
+            </div>
           `;
-        }).join("") : "";
+        }).join("");
         return `
           <h2>${escapeHtml(section.title)}</h2>
           ${workDate ? `<p><b>Ημερομηνία εργασίας:</b> ${escapeHtml(workDate)}</p>` : ""}
           ${subsections}
-          ${photos}
         `;
       }).join("");
 

@@ -1,8 +1,9 @@
-const CACHE_NAME = "school-project-form-v14";
+const CACHE_NAME = "school-project-form-v15";
 const APP_SHELL = [
   "./",
   "./site-survey-smart.html",
-  "./site-survey-manifest.webmanifest"
+  "./site-survey-manifest.webmanifest",
+  "./logo.png"
 ];
 
 self.addEventListener("install", event => {
