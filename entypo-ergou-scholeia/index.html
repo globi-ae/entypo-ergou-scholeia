@@ -1026,7 +1026,12 @@
               </label>
             `}
             <div class="row-actions" style="justify-content:flex-start">
-              ${question.photo ? `<label class="btn primary" for="photo_${question.id}">+ Φωτογραφία</label><input id="photo_${question.id}" data-photo-input="${question.id}" type="file" accept="image/*" capture="environment" multiple hidden>` : ""}
+              ${question.photo ? `
+                <label class="btn primary" for="photo_${question.id}">+ Φωτογραφία</label>
+                <input id="photo_${question.id}" data-photo-input="${question.id}" type="file" accept="image/*" capture="environment" multiple hidden>
+                <label class="btn" for="upload_${question.id}">+ Από άλμπουμ</label>
+                <input id="upload_${question.id}" data-photo-input="${question.id}" type="file" accept="image/*" multiple hidden>
+              ` : ""}
             </div>
             <div class="photo-strip">
               ${photos.map((photo, photoIndex) => `
