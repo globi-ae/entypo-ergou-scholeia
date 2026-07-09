@@ -890,8 +890,8 @@
 
     const PHOTO_MAX_SIZE = 900;
     const PHOTO_JPEG_QUALITY = 0.55;
-    const ARCHIVE_PHOTO_MAX_SIZE = 1600;
-    const ARCHIVE_PHOTO_JPEG_QUALITY = 0.78;
+    const ARCHIVE_PHOTO_MAX_SIZE = 1400;
+    const ARCHIVE_PHOTO_JPEG_QUALITY = 0.68;
 
     const form = document.getElementById("surveyForm");
     const toast = document.getElementById("toast");
@@ -1095,11 +1095,17 @@
         .replace(/^D/, "Δ");
     }
 
-    function getData() {
+    function stripArchivePhotoData(photos) {
+      return Object.fromEntries(Object.entries(photos || {}).map(([questionId, list]) => {
+        return [questionId, (list || []).map(({ archiveDataUrl, ...photo }) => photo)];
+      }));
+    }
+
+    function getData(includeArchivePhotos = true) {
       return {
         meta: getMeta(),
         answers: state.answers,
-        photos: state.photos,
+        photos: includeArchivePhotos ? state.photos : stripArchivePhotoData(state.photos),
         signatures: state.signatures,
         instances: state.instances,
         updatedAt: new Date().toISOString()
@@ -1120,7 +1126,7 @@
 
     function save(silent = true) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(getData(false)));
         document.getElementById("saveMetric").textContent = new Date().toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" });
         updateMetrics();
         if (!silent) showToast("Αποθηκεύτηκε στη συσκευή");
@@ -1401,7 +1407,7 @@ ${buildReportHtml(meta, true)}
     function exportJson() {
       const meta = getMeta();
       const name = `${meta.schoolId || "entypo-ergou"}-${meta.schoolAddress || ""}`.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "");
-      const blob = new Blob([JSON.stringify(getData(), null, 2)], { type: "application/json;charset=utf-8" });
+      const blob = new Blob([JSON.stringify(getData(false), null, 2)], { type: "application/json;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -1507,7 +1513,7 @@ ${buildReportHtml(meta, true)}
       showToast("Αποθηκεύτηκε στη συσκευή. Γίνεται αποστολή στο γραφείο.");
 
       try {
-        let payload = getData();
+        let payload = getData(true);
         try {
           const existingData = await loadOfficeData(schoolId);
           if (existingData) {
@@ -1517,7 +1523,7 @@ ${buildReportHtml(meta, true)}
             save(true);
           }
         } catch {
-          payload = getData();
+          payload = getData(true);
         }
         await fetch(OFFICE_WEB_APP_URL, {
           method: "POST",
