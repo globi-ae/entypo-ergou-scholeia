@@ -637,6 +637,7 @@
         <label class="btn" for="importJsonInput" title="Εισαγωγή αποθηκευμένου εντύπου έργου">⇧ Import</label>
         <input id="importJsonInput" type="file" accept="application/json,.json" hidden>
         <button class="btn blue" type="button" id="printBtn" title="Εκτύπωση ή αποθήκευση PDF">⎙ PDF</button>
+        <button class="btn danger" type="button" id="resetCurrentIdBtn" title="Καθαρισμός αποθηκευμένων στοιχείων για το τρέχον ID">↻ Reset ID</button>
         <button class="btn danger" type="button" id="resetBtn" title="Νέο έντυπο έργου">× Νέα</button>
       </div>
     </div>
@@ -885,7 +886,8 @@
       answers: {},
       photos: {},
       signatures: { engineerSig: "" },
-      instances: { energy: 1, water: 1, fuel: 1 }
+      instances: { energy: 1, water: 1, fuel: 1 },
+      resetOfficeMerge: false
     };
 
     const PHOTO_MAX_SIZE = 900;
@@ -1108,6 +1110,7 @@
         photos: includeArchivePhotos ? state.photos : stripArchivePhotoData(state.photos),
         signatures: state.signatures,
         instances: state.instances,
+        resetOfficeMerge: state.resetOfficeMerge,
         updatedAt: new Date().toISOString()
       };
     }
@@ -1120,6 +1123,7 @@
       state.photos = data.photos || {};
       state.signatures = { engineerSig: (data.signatures && data.signatures.engineerSig) || "" };
       state.instances = { energy: 1, water: 1, fuel: 1, ...(data.instances || {}) };
+      state.resetOfficeMerge = Boolean(data.resetOfficeMerge);
       renderSections();
       drawSignature("engineerSig");
     }
@@ -1515,7 +1519,7 @@ ${buildReportHtml(meta, true)}
       try {
         let payload = getData(true);
         try {
-          const existingData = await loadOfficeData(schoolId);
+          const existingData = state.resetOfficeMerge ? null : await loadOfficeData(schoolId);
           if (existingData) {
             payload = mergeSurveyData(existingData, payload);
             setData(payload);
@@ -1533,6 +1537,8 @@ ${buildReportHtml(meta, true)}
           },
           body: JSON.stringify({ ...payload, reportHtml: buildStandaloneReportHtml() })
         });
+        state.resetOfficeMerge = false;
+        save(true);
         showToast("Το έντυπο στάλθηκε στο γραφείο.");
       } catch {
         showToast("Αποθηκεύτηκε στη συσκευή. Η αποστολή απέτυχε, δοκιμάστε ξανά με internet.");
@@ -1726,6 +1732,28 @@ ${buildReportHtml(meta, true)}
       event.target.value = "";
     });
     document.getElementById("printBtn").addEventListener("click", () => { makeReport(); window.print(); });
+    document.getElementById("resetCurrentIdBtn").addEventListener("click", () => {
+      const schoolId = normalizeSchoolId(form.elements.schoolId.value);
+      if (!schoolId) {
+        showToast("Συμπληρώστε πρώτα το ID σχολείου.");
+        document.querySelector('[data-tab="meta"]').click();
+        form.elements.schoolId.focus();
+        return;
+      }
+      if (!confirm(`Reset για το ID ${schoolId}; Θα καθαριστούν οι εργασίες, παρατηρήσεις, φωτογραφίες και υπογραφή από αυτή τη συσκευή. Στην επόμενη αποστολή θα αντικατασταθούν τα παλιά στοιχεία στο γραφείο.`)) return;
+      state.answers = {};
+      state.photos = {};
+      state.signatures = { engineerSig: "" };
+      state.instances = { energy: 1, water: 1, fuel: 1 };
+      state.resetOfficeMerge = true;
+      ["energyWorkDate", "waterWorkDate", "fuelWorkDate", "overallStatus", "completionDate", "finalNotes"].forEach(name => {
+        if (form.elements[name]) form.elements[name].value = "";
+      });
+      clearSignature("engineerSig");
+      renderSections();
+      save(true);
+      showToast(`Έγινε reset για το ID ${schoolId}. Περάστε ξανά τα σωστά στοιχεία και πατήστε Αποθήκευση - Αποστολή.`);
+    });
     document.getElementById("resetBtn").addEventListener("click", () => {
       if (!confirm("Να καθαριστεί το τρέχον έντυπο έργου από αυτή τη συσκευή;")) return;
       localStorage.removeItem(STORAGE_KEY);
@@ -1734,6 +1762,7 @@ ${buildReportHtml(meta, true)}
       state.photos = {};
       state.signatures = { engineerSig: "" };
       state.instances = { energy: 1, water: 1, fuel: 1 };
+      state.resetOfficeMerge = false;
       clearSignature("engineerSig");
       form.elements.date.value = today();
       renderSections();
