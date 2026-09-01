@@ -1630,6 +1630,25 @@ ${buildReportHtml(meta, true)}
       img.src = dataUrl;
     }
 
+    function clearPhotosAndNotesOnly() {
+      state.photos = {};
+      Object.entries(sections).forEach(([sectionKey, section]) => {
+        const instances = getSectionInstances(sectionKey);
+        instances.forEach(instance => {
+          section.questions.forEach(question => {
+            const questionId = instanceQuestionId(question.id, instance);
+            const answer = state.answers[questionId];
+            if (!answer) return;
+            if ("notes" in answer) answer.notes = "";
+            question.placeholders.forEach((label, index) => {
+              if (/σχόλιο|παρατηρή/i.test(label)) answer[`quick${index + 1}`] = "";
+            });
+          });
+        });
+      });
+      if (form.elements.finalNotes) form.elements.finalNotes.value = "";
+    }
+
     document.querySelectorAll(".tab").forEach(tab => {
       tab.addEventListener("click", () => {
         document.querySelectorAll(".tab").forEach(item => item.setAttribute("aria-selected", String(item === tab)));
@@ -1732,7 +1751,7 @@ ${buildReportHtml(meta, true)}
       event.target.value = "";
     });
     document.getElementById("printBtn").addEventListener("click", () => { makeReport(); window.print(); });
-    document.getElementById("resetCurrentIdBtn").addEventListener("click", () => {
+    document.getElementById("resetCurrentIdBtn").addEventListener("click", async () => {
       const schoolId = normalizeSchoolId(form.elements.schoolId.value);
       if (!schoolId) {
         showToast("Συμπληρώστε πρώτα το ID σχολείου.");
@@ -1740,19 +1759,21 @@ ${buildReportHtml(meta, true)}
         form.elements.schoolId.focus();
         return;
       }
-      if (!confirm(`Reset για το ID ${schoolId}; Θα καθαριστούν οι εργασίες, παρατηρήσεις, φωτογραφίες και υπογραφή από αυτή τη συσκευή. Στην επόμενη αποστολή θα αντικατασταθούν τα παλιά στοιχεία στο γραφείο.`)) return;
-      state.answers = {};
-      state.photos = {};
-      state.signatures = { engineerSig: "" };
-      state.instances = { energy: 1, water: 1, fuel: 1 };
-      state.resetOfficeMerge = true;
-      ["energyWorkDate", "waterWorkDate", "fuelWorkDate", "overallStatus", "completionDate", "finalNotes"].forEach(name => {
-        if (form.elements[name]) form.elements[name].value = "";
-      });
-      clearSignature("engineerSig");
+      if (!confirm(`Reset φωτογραφιών και παρατηρήσεων για το ID ${schoolId}; Θα κρατηθούν SN, ημερομηνίες, καταστάσεις, ονόματα και υπογραφή.`)) return;
+      showToast("Φορτώνω τα υπάρχοντα στοιχεία του ID...");
+      const existingData = await loadOfficeData(schoolId);
+      if (existingData) {
+        setData(existingData);
+        form.elements.schoolId.value = schoolId;
+        state.resetOfficeMerge = true;
+      } else {
+        state.resetOfficeMerge = false;
+        showToast("Δεν βρέθηκαν παλιά στοιχεία. Καθαρίζω μόνο ό,τι υπάρχει στη συσκευή.");
+      }
+      clearPhotosAndNotesOnly();
       renderSections();
       save(true);
-      showToast(`Έγινε reset για το ID ${schoolId}. Περάστε ξανά τα σωστά στοιχεία και πατήστε Αποθήκευση - Αποστολή.`);
+      showToast(`Καθαρίστηκαν μόνο φωτογραφίες και παρατηρήσεις για το ID ${schoolId}.`);
     });
     document.getElementById("resetBtn").addEventListener("click", () => {
       if (!confirm("Να καθαριστεί το τρέχον έντυπο έργου από αυτή τη συσκευή;")) return;
